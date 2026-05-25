@@ -16,11 +16,11 @@
             text-align: center; padding: 20px; box-sizing: border-box;
         }
         #loginScreen img { max-width: 180px; width: 50%; height: auto; margin-bottom: 20px; border-radius: 12px; }
-        #loginScreen input[type="password"] { 
+        #loginScreen input[type="text"], #loginScreen input[type="password"] { 
             padding: 12px; width: 220px; text-align: center; font-size: 16px; 
-            border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px; 
+            border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px; box-sizing: border-box;
         }
-        .btn-login { background-color: #2196F3; color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        .btn-login { background-color: #2196F3; color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; width: 220px; }
 
         /* Écran d'accueil / Splash Screen */
         #splashScreen {
@@ -67,14 +67,15 @@
     <div id="loginScreen">
         <img src="Logo_app.jpg" alt="Logo">
         <h3 style="color: #333; margin-bottom: 20px;">Accès Sécurisé Releveur_DET</h3>
-        <input type="password" id="accessCode" placeholder="Entrez le code d'accès">
-        <button onclick="verifierCode()" class="btn-login">Se connecter</button>
-        <p id="loginError" style="color: red; font-weight: bold; margin-top: 10px; display: none;">❌ Code incorrect</p>
+        <input type="text" id="username" placeholder="Nom d'utilisateur">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="verifierIdentifiants()" class="btn-login">Se connecter</button>
+        <p id="loginError" style="color: red; font-weight: bold; margin-top: 10px; display: none;">❌ Identifiants incorrects</p>
     </div>
 
     <div id="splashScreen">
         <img src="Logo_app.jpg" alt="Logo Application">
-        <h1>Releveur_DET</h1>
+        <h1 id="welcomeTitle">Releveur_DET</h1>
         <button class="btn-start" onclick="demarrerApplication()">🚀 Commencer la saisie</button>
     </div>
 
@@ -144,8 +145,11 @@
     </div>
 
     <script>
-        // 🔐 MOT DE PASSE UNIQUE
-        const CODE_UNIQUE = "Srmcs**2026";
+        // 🔐 VOS COMPTES CONFIGURÉS
+        const COMPTES_AUTORISES = {
+            "skihil": "Srmcs**2026",
+            "saber": "123456789"
+        };
 
         let data = [];
         let tableauVisible = true;
@@ -153,30 +157,38 @@
         let historiqueIndex = -1; 
 
         window.onload = function() {
-            let estConnecte = localStorage.getItem("releveur_det_auth");
-            if (estConnecte === "true") {
+            let utilisateurActif = localStorage.getItem("releveur_det_user");
+            if (utilisateurActif) {
                 document.getElementById("loginScreen").style.display = "none";
                 document.getElementById("splashScreen").style.display = "flex";
+                // Met la première lettre en majuscule pour l'esthétique
+                let affichageNom = utilisateurActif.charAt(0).toUpperCase() + utilisateurActif.slice(1);
+                document.getElementById("welcomeTitle").innerHTML = `Bonjour, ${affichageNom} 👋`;
             }
 
             let sauvegarde = localStorage.getItem("releveur_det_data");
             if (sauvegarde) { data = JSON.parse(sauvegarde); }
         };
 
-        function verifierCode() {
-            let saisie = document.getElementById("accessCode").value;
-            if (saisie === CODE_UNIQUE) {
-                localStorage.setItem("releveur_det_auth", "true"); 
+        function verifierIdentifiants() {
+            let userSaisi = document.getElementById("username").value.trim().toLowerCase();
+            let passSaisi = document.getElementById("password").value;
+
+            if (COMPTES_AUTORISES[userSaisi] && COMPTES_AUTORISES[userSaisi] === passSaisi) {
+                localStorage.setItem("releveur_det_user", userSaisi); 
                 document.getElementById("loginScreen").style.display = "none";
                 document.getElementById("splashScreen").style.display = "flex";
+                let affichageNom = userSaisi.charAt(0).toUpperCase() + userSaisi.slice(1);
+                document.getElementById("welcomeTitle").innerHTML = `Bonjour, ${affichageNom} 👋`;
+                document.getElementById("loginError").style.display = "none";
             } else {
                 document.getElementById("loginError").style.display = "block";
             }
         }
 
         function deconnexion() {
-            if(confirm("Voulez-vous vous déconnecter ? (Vos données resteront sauvegardées)")) {
-                localStorage.removeItem("releveur_det_auth");
+            if(confirm("Voulez-vous vous déconnecter ? (Vos saisies en cours sur ce téléphone resteront en mémoire)")) {
+                localStorage.removeItem("releveur_det_user");
                 location.reload(); 
             }
         }
