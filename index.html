@@ -26,7 +26,7 @@
             box-sizing: border-box;
         }
         #splashScreen img {
-            max-width: 320px; /* Largeur du logo ajustée pour smartphone */
+            max-width: 320px;
             width: 85%;       
             height: auto;
             margin-bottom: 30px;
@@ -52,24 +52,27 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        /* Interface principale cachée par défaut */
+        /* Interface principale */
         #mainContent { display: none; }
-
-        /* Styles de l'interface de saisie */
         .form-group { margin-bottom: 12px; }
         input[type="text"], input[type="number"] { margin: 5px; padding: 8px; width: 130px; box-sizing: border-box; }
         
-        /* Zone des boutons principaux */
+        /* Zone des boutons */
         .actions-container { margin: 15px 0; }
         button { margin: 5px; padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; color: white; }
         
         .btn-add { background-color: #4CAF50; }
-        .btn-excel { background-color: #2196F3; }
         .btn-undo { background-color: #FF9800; } 
+        .btn-excel { background-color: #2196F3; }
         .btn-toggle { background-color: #777; }
+        .btn-clear { background-color: #f44336; float: right; } /* Nouveau bouton pour Reset */
+        
+        /* Boutons d'action dans le tableau */
+        .btn-edit-row { background-color: #FF9800; padding: 5px 10px; font-size: 12px; margin: 2px; }
+        .btn-delete-row { background-color: #f44336; padding: 5px 10px; font-size: 12px; margin: 2px; }
         
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; background: white; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; color: #333; }
         th { background-color: #f2f2f2; }
     </style>
@@ -83,7 +86,7 @@
     </div>
 
     <div id="mainContent">
-        <h2>📍 Saisie Tronçons BT</h2>
+        <h2 id="formTitle">📍 Saisie Tronçons BT</h2>
 
         <div class="form-group">
             <label><b>Tronçon :</b></label>
@@ -121,10 +124,11 @@
         </div>
         
         <div class="actions-container">
-            <button onclick="ajouter()" class="btn-add">➕ Ajouter</button>
-            <button onclick="corrigerPrecedent()" class="btn-undo">↩️ Précédent</button>
+            <button onclick="ajouter()" id="submitBtn" class="btn-add">➕ Ajouter</button>
+            <button onclick="remonterHistorique()" class="btn-undo">↩️ Précédent</button>
             <button onclick="exporter()" class="btn-excel">📊 Export Excel</button>
             <button id="toggleBtn" onclick="toggleTableau()" class="btn-toggle">🙈 Masquer le tableau</button>
+            <button onclick="reinitialiserTout()" class="btn-clear">🗑️ Vider le tableau</button>
         </div>
 
         <div id="tableContainer" class="table-container">
@@ -139,6 +143,7 @@
                         <th>Linéaire Carrelage Spécial</th>
                         <th>Linéaire Béton</th>
                         <th>Linéaire TN</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -149,10 +154,26 @@
     <script>
         let data = [];
         let tableauVisible = true;
+        let editIndex = -1; 
+        let historiqueIndex = -1; 
+
+        // 🔄 CHARGEMENT AUTOMATIQUE AU DÉMARRAGE
+        window.onload = function() {
+            let sauvegarde = localStorage.getItem("releveur_det_data");
+            if (sauvegarde) {
+                data = JSON.parse(sauvegarde);
+            }
+        };
 
         function demarrerApplication() {
             document.getElementById("splashScreen").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
+            afficher(); // On affiche les données récupérées s'il y en a
+        }
+
+        // 💾 FONCTION DE SAUVEGARDE AUTOMATIQUE
+        function sauvegarderDonnees() {
+            localStorage.setItem("releveur_det_data", JSON.stringify(data));
         }
 
         function ajouter() {
@@ -167,7 +188,7 @@
 
             if(!troncon) { alert("Veuillez saisir un nom de tronçon."); return; }
 
-            data.push({ 
+            let rowData = { 
                 troncon, 
                 section: section, 
                 chaussee: parseFloat(chaussee), 
@@ -176,8 +197,20 @@
                 carrelage_special: parseFloat(carrelage_special), 
                 beton: parseFloat(beton), 
                 tn: parseFloat(tn) 
-            });
+            };
+
+            if (editIndex === -1) {
+                data.push(rowData);
+            } else {
+                data[editIndex] = rowData;
+                editIndex = -1;
+                historiqueIndex = -1; 
+                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").style.color = "#333";
+            }
             
+            sauvegarderDonnees(); // Sauvegarde automatique après ajout/modification
             afficher();
             clearForm();
         }
@@ -185,7 +218,7 @@
         function afficher() {
             let tbody = document.getElementById("tableBody");
             tbody.innerHTML = "";
-            data.forEach((d) => {
+            data.forEach((d, index) => {
                 tbody.innerHTML += `
                     <tr>
                         <td><b>${d.troncon}</b></td>
@@ -196,18 +229,36 @@
                         <td>${d.carrelage_special} m</td>
                         <td>${d.beton} m</td>
                         <td>${d.tn} m</td>
+                        <td>
+                            <button onclick="preparerModification(${index})" class="btn-edit-row">✏️</button>
+                            <button onclick="supprimerLigne(${index})" class="btn-delete-row">❌</button>
+                        </td>
                     </tr>`;
             });
         }
 
-        function corrigerPrecedent() {
+        function remonterHistorique() {
             if(data.length === 0) { 
-                alert("Aucune saisie précédente à modifier !"); 
+                alert("Aucune saisie dans le tableau !"); 
                 return; 
             }
-            
-            let item = data.pop(); 
-            
+            if (historiqueIndex === -1) {
+                historiqueIndex = data.length - 1;
+            } else {
+                historiqueIndex--;
+            }
+            if (historiqueIndex < 0) {
+                alert("Vous êtes revenu au tout début. Retour au dernier tronçon saisi.");
+                historiqueIndex = data.length - 1;
+            }
+            preparerModification(historiqueIndex);
+        }
+
+        function preparerModification(index) {
+            let item = data[index];
+            editIndex = index;
+            historiqueIndex = index; 
+
             document.getElementById("troncon").value = item.troncon;
             document.getElementById("chaussee").value = item.chaussee;
             document.getElementById("pavee").value = item.pavee;
@@ -221,14 +272,47 @@
             } else {
                 document.getElementById("sec50").checked = true;
             }
+
+            document.getElementById("submitBtn").innerHTML = "💾 Enregistrer la correction";
+            document.getElementById("formTitle").innerHTML = `✏️ Modification (${index + 1}/${data.length}) : ${item.troncon}`;
+            document.getElementById("formTitle").style.color = "#FF9800";
             
-            afficher();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function supprimerLigne(index) {
+            if(confirm(`Voulez-vous vraiment supprimer le tronçon "${data[index].troncon}" ?`)) {
+                data.splice(index, 1);
+                sauvegarderDonnees(); // Sauvegarde après suppression
+                afficher();
+                editIndex = -1;
+                historiqueIndex = -1;
+                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").style.color = "#333";
+                clearForm();
+            }
+        }
+
+        // 🗑️ FONCTION POUR TOUT EFFACER (À faire uniquement après un export Excel réussi)
+        function reinitialiserTout() {
+            if (confirm("⚠️ Attention : Voulez-vous vraiment vider tout le tableau ? Assurez-vous d'avoir bien exporté votre fichier Excel avant !")) {
+                data = [];
+                localStorage.removeItem("releveur_det_data"); // On vide la mémoire
+                afficher();
+                clearForm();
+                editIndex = -1;
+                historiqueIndex = -1;
+                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").style.color = "#333";
+                alert("Le tableau a été réinitialisé.");
+            }
         }
 
         function toggleTableau() {
             let container = document.getElementById("tableContainer");
             let btn = document.getElementById("toggleBtn");
-            
             if (tableauVisible) {
                 container.style.display = "none";
                 btn.innerHTML = "👁️ Afficher le tableau";
@@ -252,7 +336,6 @@
 
         function exporter() {
             if(data.length === 0) { alert("Le tableau est vide !"); return; }
-            
             let dataFormatee = data.map(item => ({
                 "Tronçon": item.troncon,
                 "Section": item.section + " mm²",
@@ -263,7 +346,6 @@
                 "Linéaire Béton (m)": item.beton,
                 "Linéaire TN (m)": item.tn
             }));
-
             let ws = XLSX.utils.json_to_sheet(dataFormatee);
             let wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Troncons BT");
