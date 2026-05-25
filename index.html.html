@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Releveur_DET - Tronçons BT</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f9f9f9; }
+        
+        /* Écran d'accueil / Splash Screen */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #splashScreen img {
+            max-width: 320px; /* Largeur du logo ajustée pour smartphone */
+            width: 85%;       
+            height: auto;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15); 
+        }
+        #splashScreen h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 35px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .btn-start {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 16px 35px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Interface principale cachée par défaut */
+        #mainContent { display: none; }
+
+        /* Styles de l'interface de saisie */
+        .form-group { margin-bottom: 12px; }
+        input[type="text"], input[type="number"] { margin: 5px; padding: 8px; width: 130px; box-sizing: border-box; }
+        
+        /* Zone des boutons principaux */
+        .actions-container { margin: 15px 0; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; color: white; }
+        
+        .btn-add { background-color: #4CAF50; }
+        .btn-excel { background-color: #2196F3; }
+        .btn-undo { background-color: #FF9800; } 
+        .btn-toggle { background-color: #777; }
+        
+        .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 800px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; color: #333; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+    <div id="splashScreen">
+        <img src="Logo_app.jpg" alt="Logo Application">
+        <h1>Releveur_DET</h1>
+        <button class="btn-start" onclick="demarrerApplication()">🚀 Commencer la saisie</button>
+    </div>
+
+    <div id="mainContent">
+        <h2>📍 Saisie Tronçons BT</h2>
+
+        <div class="form-group">
+            <label><b>Tronçon :</b></label>
+            <input type="text" id="troncon" placeholder="T1">
+        </div>
+
+        <div class="form-group">
+            <label><b>Section :</b></label>
+            <input type="radio" name="section" id="sec32" value="32" checked> 32 mm²
+            <input type="radio" name="section" id="sec50" value="50"> 50 mm²
+        </div>
+        
+        <hr>
+
+        <div class="form-group">
+            <label>Linéaire Chaussée (m) :</label>
+            <input type="number" id="chaussee" step="0.01" min="0"><br>
+
+            <label>Linéaire Pavée (m) :</label>
+            <input type="number" id="pavee" step="0.01" min="0"><br>
+
+            <label>Linéaire Carrelage (m) :</label>
+            <input type="number" id="carrelage" step="0.01" min="0">
+        </div>
+
+        <div class="form-group">
+            <label>Linéaire Carrelage Spécial (m) :</label>
+            <input type="number" id="carrelage_special" step="0.01" min="0"><br>
+
+            <label>Linéaire Béton (m) :</label>
+            <input type="number" id="beton" step="0.01" min="0"><br>
+
+            <label>Linéaire TN (m) :</label>
+            <input type="number" id="tn" step="0.01" min="0">
+        </div>
+        
+        <div class="actions-container">
+            <button onclick="ajouter()" class="btn-add">➕ Ajouter</button>
+            <button onclick="corrigerPrecedent()" class="btn-undo">↩️ Précédent</button>
+            <button onclick="exporter()" class="btn-excel">📊 Export Excel</button>
+            <button id="toggleBtn" onclick="toggleTableau()" class="btn-toggle">🙈 Masquer le tableau</button>
+        </div>
+
+        <div id="tableContainer" class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tronçon</th>
+                        <th>Section</th>
+                        <th>Linéaire Chaussée</th>
+                        <th>Linéaire Pavée</th>
+                        <th>Linéaire Carrelage</th>
+                        <th>Linéaire Carrelage Spécial</th>
+                        <th>Linéaire Béton</th>
+                        <th>Linéaire TN</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let data = [];
+        let tableauVisible = true;
+
+        function demarrerApplication() {
+            document.getElementById("splashScreen").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+        }
+
+        function ajouter() {
+            let troncon = document.getElementById("troncon").value;
+            let section = document.querySelector('input[name="section"]:checked').value;
+            let chaussee = document.getElementById("chaussee").value || 0;
+            let pavee = document.getElementById("pavee").value || 0;
+            let carrelage = document.getElementById("carrelage").value || 0;
+            let carrelage_special = document.getElementById("carrelage_special").value || 0;
+            let beton = document.getElementById("beton").value || 0;
+            let tn = document.getElementById("tn").value || 0;
+
+            if(!troncon) { alert("Veuillez saisir un nom de tronçon."); return; }
+
+            data.push({ 
+                troncon, 
+                section: section, 
+                chaussee: parseFloat(chaussee), 
+                pavee: parseFloat(pavee), 
+                carrelage: parseFloat(carrelage), 
+                carrelage_special: parseFloat(carrelage_special), 
+                beton: parseFloat(beton), 
+                tn: parseFloat(tn) 
+            });
+            
+            afficher();
+            clearForm();
+        }
+
+        function afficher() {
+            let tbody = document.getElementById("tableBody");
+            tbody.innerHTML = "";
+            data.forEach((d) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${d.troncon}</b></td>
+                        <td>${d.section} mm²</td>
+                        <td>${d.chaussee} m</td>
+                        <td>${d.pavee} m</td>
+                        <td>${d.carrelage} m</td>
+                        <td>${d.carrelage_special} m</td>
+                        <td>${d.beton} m</td>
+                        <td>${d.tn} m</td>
+                    </tr>`;
+            });
+        }
+
+        function corrigerPrecedent() {
+            if(data.length === 0) { 
+                alert("Aucune saisie précédente à modifier !"); 
+                return; 
+            }
+            
+            let item = data.pop(); 
+            
+            document.getElementById("troncon").value = item.troncon;
+            document.getElementById("chaussee").value = item.chaussee;
+            document.getElementById("pavee").value = item.pavee;
+            document.getElementById("carrelage").value = item.carrelage;
+            document.getElementById("carrelage_special").value = item.carrelage_special;
+            document.getElementById("beton").value = item.beton;
+            document.getElementById("tn").value = item.tn;
+            
+            if(item.section === "32") {
+                document.getElementById("sec32").checked = true;
+            } else {
+                document.getElementById("sec50").checked = true;
+            }
+            
+            afficher();
+        }
+
+        function toggleTableau() {
+            let container = document.getElementById("tableContainer");
+            let btn = document.getElementById("toggleBtn");
+            
+            if (tableauVisible) {
+                container.style.display = "none";
+                btn.innerHTML = "👁️ Afficher le tableau";
+                tableauVisible = false;
+            } else {
+                container.style.display = "block";
+                btn.innerHTML = "🙈 Masquer le tableau";
+                tableauVisible = true;
+            }
+        }
+
+        function clearForm() {
+            document.getElementById("troncon").value = "";
+            document.getElementById("chaussee").value = "";
+            document.getElementById("pavee").value = "";
+            document.getElementById("carrelage").value = "";
+            document.getElementById("carrelage_special").value = "";
+            document.getElementById("beton").value = "";
+            document.getElementById("tn").value = "";
+        }
+
+        function exporter() {
+            if(data.length === 0) { alert("Le tableau est vide !"); return; }
+            
+            let dataFormatee = data.map(item => ({
+                "Tronçon": item.troncon,
+                "Section": item.section + " mm²",
+                "Linéaire Chaussée (m)": item.chaussee,
+                "Linéaire Pavée (m)": item.pavee,
+                "Linéaire Carrelage (m)": item.carrelage,
+                "Linéaire Carrelage Spécial (m)": item.carrelage_special,
+                "Linéaire Béton (m)": item.beton,
+                "Linéaire TN (m)": item.tn
+            }));
+
+            let ws = XLSX.utils.json_to_sheet(dataFormatee);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Troncons BT");
+            XLSX.writeFile(wb, "metres_troncons_BT.xlsx");
+        }
+    </script>
+</body>
+</html>
