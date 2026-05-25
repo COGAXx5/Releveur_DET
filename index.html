@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Releveur_DET - Tronçons BT</title>
+    <title>Releveur_DET - Tronçons</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f9f9f9; }
@@ -54,22 +54,53 @@
 
         /* Interface principale */
         #mainContent { display: none; }
-        .form-group { margin-bottom: 12px; }
-        input[type="text"], input[type="number"] { margin: 5px; padding: 8px; width: 130px; box-sizing: border-box; }
+        
+        /* Grille pour aligner parfaitement les libellés à gauche et les inputs à droite */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            row-gap: 12px;
+            column-gap: 10px;
+            align-items: center;
+            max-width: 360px;
+            margin-bottom: 15px;
+        }
+        
+        .form-grid label {
+            font-weight: bold;
+            color: #444;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        input[type="text"], input[type="number"] { 
+            padding: 10px; 
+            width: 140px; 
+            box-sizing: border-box; 
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            text-align: right; /* Aligne aussi le texte à l'intérieur de la case à droite */
+        }
+        
+        hr { border: 0; height: 1px; background: #ddd; margin: 15px 0; }
         
         /* Zone des boutons */
         .actions-container { margin: 15px 0; }
-        button { margin: 5px; padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 4px; border: none; color: white; }
+        button { margin: 5px; padding: 12px 15px; cursor: pointer; font-weight: bold; border-radius: 6px; border: none; color: white; font-size: 14px; }
         
         .btn-add { background-color: #4CAF50; }
         .btn-undo { background-color: #FF9800; } 
         .btn-excel { background-color: #2196F3; }
         .btn-toggle { background-color: #777; }
-        .btn-clear { background-color: #f44336; float: right; } /* Nouveau bouton pour Reset */
+        .btn-clear { background-color: #f44336; float: right; } 
         
         /* Boutons d'action dans le tableau */
-        .btn-edit-row { background-color: #FF9800; padding: 5px 10px; font-size: 12px; margin: 2px; }
-        .btn-delete-row { background-color: #f44336; padding: 5px 10px; font-size: 12px; margin: 2px; }
+        .btn-edit-row { background-color: #FF9800; padding: 6px 12px; font-size: 13px; margin: 2px; }
+        .btn-delete-row { background-color: #f44336; padding: 6px 12px; font-size: 13px; margin: 2px; }
         
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
@@ -86,41 +117,39 @@
     </div>
 
     <div id="mainContent">
-        <h2 id="formTitle">📍 Saisie Tronçons BT</h2>
+        <h2 id="formTitle">📍 Saisie Tronçon</h2>
 
-        <div class="form-group">
-            <label><b>Tronçon :</b></label>
-            <input type="text" id="troncon" placeholder="T1">
-        </div>
+        <div class="form-grid">
+            <label>Tronçon :</label>
+            <input type="text" id="troncon" placeholder="T1" style="text-align: left;">
 
-        <div class="form-group">
-            <label><b>Section :</b></label>
-            <input type="radio" name="section" id="sec32" value="32" checked> 32 mm²
-            <input type="radio" name="section" id="sec50" value="50"> 50 mm²
+            <label>Section :</label>
+            <div class="radio-group">
+                <label style="font-weight:normal;"><input type="radio" name="section" id="sec32" value="32" checked> 32</label>
+                <label style="font-weight:normal;"><input type="radio" name="section" id="sec50" value="50"> 50</label>
+            </div>
         </div>
         
         <hr>
 
-        <div class="form-group">
-            <label>Linéaire Chaussée (m) :</label>
-            <input type="number" id="chaussee" step="0.01" min="0"><br>
+        <div class="form-grid">
+            <label>Chaussée :</label>
+            <input type="number" id="chaussee" step="0.01" min="0" placeholder="0.00">
 
-            <label>Linéaire Pavée (m) :</label>
-            <input type="number" id="pavee" step="0.01" min="0"><br>
+            <label>Pavée :</label>
+            <input type="number" id="pavee" step="0.01" min="0" placeholder="0.00">
 
-            <label>Linéaire Carrelage (m) :</label>
-            <input type="number" id="carrelage" step="0.01" min="0">
-        </div>
+            <label>Carrelage :</label>
+            <input type="number" id="carrelage" step="0.01" min="0" placeholder="0.00">
 
-        <div class="form-group">
-            <label>Linéaire Carrelage Spécial (m) :</label>
-            <input type="number" id="carrelage_special" step="0.01" min="0"><br>
+            <label>Carrelage Sp :</label>
+            <input type="number" id="carrelage_special" step="0.01" min="0" placeholder="0.00">
 
-            <label>Linéaire Béton (m) :</label>
-            <input type="number" id="beton" step="0.01" min="0"><br>
+            <label>Béton :</label>
+            <input type="number" id="beton" step="0.01" min="0" placeholder="0.00">
 
-            <label>Linéaire TN (m) :</label>
-            <input type="number" id="tn" step="0.01" min="0">
+            <label>TN :</label>
+            <input type="number" id="tn" step="0.01" min="0" placeholder="0.00">
         </div>
         
         <div class="actions-container">
@@ -128,7 +157,7 @@
             <button onclick="remonterHistorique()" class="btn-undo">↩️ Précédent</button>
             <button onclick="exporter()" class="btn-excel">📊 Export Excel</button>
             <button id="toggleBtn" onclick="toggleTableau()" class="btn-toggle">🙈 Masquer le tableau</button>
-            <button onclick="reinitialiserTout()" class="btn-clear">🗑️ Vider le tableau</button>
+            <button onclick="reinitialiserTout()" class="btn-clear">🗑️ Vider</button>
         </div>
 
         <div id="tableContainer" class="table-container">
@@ -136,13 +165,13 @@
                 <thead>
                     <tr>
                         <th>Tronçon</th>
-                        <th>Section</th>
-                        <th>Linéaire Chaussée</th>
-                        <th>Linéaire Pavée</th>
-                        <th>Linéaire Carrelage</th>
-                        <th>Linéaire Carrelage Spécial</th>
-                        <th>Linéaire Béton</th>
-                        <th>Linéaire TN</th>
+                        <th>Section (mm²)</th>
+                        <th>Chaussée (m)</th>
+                        <th>Pavée (m)</th>
+                        <th>Carrelage (m)</th>
+                        <th>Carrelage Sp (m)</th>
+                        <th>Béton (m)</th>
+                        <th>TN (m)</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -157,7 +186,6 @@
         let editIndex = -1; 
         let historiqueIndex = -1; 
 
-        // 🔄 CHARGEMENT AUTOMATIQUE AU DÉMARRAGE
         window.onload = function() {
             let sauvegarde = localStorage.getItem("releveur_det_data");
             if (sauvegarde) {
@@ -168,10 +196,9 @@
         function demarrerApplication() {
             document.getElementById("splashScreen").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
-            afficher(); // On affiche les données récupérées s'il y en a
+            afficher(); 
         }
 
-        // 💾 FONCTION DE SAUVEGARDE AUTOMATIQUE
         function sauvegarderDonnees() {
             localStorage.setItem("releveur_det_data", JSON.stringify(data));
         }
@@ -206,11 +233,11 @@
                 editIndex = -1;
                 historiqueIndex = -1; 
                 document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
                 document.getElementById("formTitle").style.color = "#333";
             }
             
-            sauvegarderDonnees(); // Sauvegarde automatique après ajout/modification
+            sauvegarderDonnees(); 
             afficher();
             clearForm();
         }
@@ -283,30 +310,28 @@
         function supprimerLigne(index) {
             if(confirm(`Voulez-vous vraiment supprimer le tronçon "${data[index].troncon}" ?`)) {
                 data.splice(index, 1);
-                sauvegarderDonnees(); // Sauvegarde après suppression
+                sauvegarderDonnees(); 
                 afficher();
                 editIndex = -1;
                 historiqueIndex = -1;
                 document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
                 document.getElementById("formTitle").style.color = "#333";
                 clearForm();
             }
         }
 
-        // 🗑️ FONCTION POUR TOUT EFFACER (À faire uniquement après un export Excel réussi)
         function reinitialiserTout() {
-            if (confirm("⚠️ Attention : Voulez-vous vraiment vider tout le tableau ? Assurez-vous d'avoir bien exporté votre fichier Excel avant !")) {
+            if (confirm("⚠️ Vider tout le tableau ? Vérifiez l'export Excel avant !")) {
                 data = [];
-                localStorage.removeItem("releveur_det_data"); // On vide la mémoire
+                localStorage.removeItem("releveur_det_data"); 
                 afficher();
                 clearForm();
                 editIndex = -1;
                 historiqueIndex = -1;
                 document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçons BT";
+                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
                 document.getElementById("formTitle").style.color = "#333";
-                alert("Le tableau a été réinitialisé.");
             }
         }
 
@@ -348,8 +373,8 @@
             }));
             let ws = XLSX.utils.json_to_sheet(dataFormatee);
             let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Troncons BT");
-            XLSX.writeFile(wb, "metres_troncons_BT.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Troncons");
+            XLSX.writeFile(wb, "metres_troncons.xlsx");
         }
     </script>
 </body>
