@@ -3,112 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Releveur_DET - Tronçons</title>
+    <title>Releveur_DET - Connexion</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f9f9f9; }
         
+        /* Écran de Connexion / Sécurité */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 2000;
+            text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #loginScreen img { max-width: 180px; width: 50%; height: auto; margin-bottom: 20px; border-radius: 12px; }
+        #loginScreen input[type="password"] { 
+            padding: 12px; width: 220px; text-align: center; font-size: 16px; 
+            border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px; 
+        }
+        .btn-login { background-color: #2196F3; color: white; border: none; padding: 12px 30px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+
         /* Écran d'accueil / Splash Screen */
         #splashScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            text-align: center;
-            padding: 20px;
-            box-sizing: border-box;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffffff; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 1000;
+            text-align: center; padding: 20px; box-sizing: border-box; display: none;
         }
-        #splashScreen img {
-            max-width: 320px;
-            width: 85%;       
-            height: auto;
-            margin-bottom: 30px;
-            border-radius: 12px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.15); 
-        }
-        #splashScreen h1 {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 35px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-        .btn-start {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 16px 35px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        #splashScreen img { max-width: 320px; width: 85%; height: auto; margin-bottom: 30px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        #splashScreen h1 { color: #333; font-size: 28px; margin-bottom: 35px; font-weight: bold; letter-spacing: 1px; }
+        .btn-start { background-color: #4CAF50; color: white; border: none; padding: 16px 35px; font-size: 18px; font-weight: bold; border-radius: 25px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
         /* Interface principale */
         #mainContent { display: none; }
         
-        /* Grille pour aligner parfaitement les libellés à gauche et les inputs à droite */
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            row-gap: 12px;
-            column-gap: 10px;
-            align-items: center;
-            max-width: 360px;
-            margin-bottom: 15px;
-        }
-        
-        .form-grid label {
-            font-weight: bold;
-            color: #444;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        input[type="text"], input[type="number"] { 
-            padding: 10px; 
-            width: 140px; 
-            box-sizing: border-box; 
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            text-align: right; /* Aligne aussi le texte à l'intérieur de la case à droite */
-        }
-        
+        /* Grille formulaire */
+        .form-grid { display: grid; grid-template-columns: 1fr auto; row-gap: 12px; column-gap: 10px; align-items: center; max-width: 360px; margin-bottom: 15px; }
+        .form-grid label { font-weight: bold; color: #444; }
+        .radio-group { display: flex; gap: 10px; justify-content: flex-end; }
+        input[type="text"], input[type="number"] { padding: 10px; width: 140px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; text-align: right; }
         hr { border: 0; height: 1px; background: #ddd; margin: 15px 0; }
         
         /* Zone des boutons */
         .actions-container { margin: 15px 0; }
         button { margin: 5px; padding: 12px 15px; cursor: pointer; font-weight: bold; border-radius: 6px; border: none; color: white; font-size: 14px; }
-        
         .btn-add { background-color: #4CAF50; }
         .btn-undo { background-color: #FF9800; } 
         .btn-excel { background-color: #2196F3; }
         .btn-toggle { background-color: #777; }
         .btn-clear { background-color: #f44336; float: right; } 
+        .btn-logout { background-color: #555; font-size: 11px; padding: 5px 10px; position: absolute; top: 15px; right: 15px; }
         
-        /* Boutons d'action dans le tableau */
-        .btn-edit-row { background-color: #FF9800; padding: 6px 12px; font-size: 13px; margin: 2px; }
-        .btn-delete-row { background-color: #f44336; padding: 6px 12px; font-size: 13px; margin: 2px; }
-        
+        /* Tableaux */
         .table-container { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; background: white; min-width: 900px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: center; color: #333; }
         th { background-color: #f2f2f2; }
+        .btn-edit-row { background-color: #FF9800; padding: 6px 12px; font-size: 13px; margin: 2px; }
+        .btn-delete-row { background-color: #f44336; padding: 6px 12px; font-size: 13px; margin: 2px; }
     </style>
 </head>
 <body>
+
+    <div id="loginScreen">
+        <img src="Logo_app.jpg" alt="Logo">
+        <h3 style="color: #333; margin-bottom: 20px;">Accès Sécurisé Releveur_DET</h3>
+        <input type="password" id="accessCode" placeholder="Entrez le code d'accès">
+        <button onclick="verifierCode()" class="btn-login">Se connecter</button>
+        <p id="loginError" style="color: red; font-weight: bold; margin-top: 10px; display: none;">❌ Code incorrect</p>
+    </div>
 
     <div id="splashScreen">
         <img src="Logo_app.jpg" alt="Logo Application">
@@ -117,6 +79,7 @@
     </div>
 
     <div id="mainContent">
+        <button onclick="deconnexion()" class="btn-logout">🔒 Déconnexion</button>
         <h2 id="formTitle">📍 Saisie Tronçon</h2>
 
         <div class="form-grid">
@@ -156,7 +119,7 @@
             <button onclick="ajouter()" id="submitBtn" class="btn-add">➕ Ajouter</button>
             <button onclick="remonterHistorique()" class="btn-undo">↩️ Précédent</button>
             <button onclick="exporter()" class="btn-excel">📊 Export Excel</button>
-            <button id="toggleBtn" onclick="toggleTableau()" class="btn-toggle">🙈 Masquer le tableau</button>
+            <button id="toggleBtn" onclick="toggleTableau()" class="btn-toggle">🙈 Masquer</button>
             <button onclick="reinitialiserTout()" class="btn-clear">🗑️ Vider</button>
         </div>
 
@@ -181,17 +144,42 @@
     </div>
 
     <script>
+        // 🔐 MOT DE PASSE UNIQUE
+        const CODE_UNIQUE = "Srmcs**2026";
+
         let data = [];
         let tableauVisible = true;
         let editIndex = -1; 
         let historiqueIndex = -1; 
 
         window.onload = function() {
-            let sauvegarde = localStorage.getItem("releveur_det_data");
-            if (sauvegarde) {
-                data = JSON.parse(sauvegarde);
+            let estConnecte = localStorage.getItem("releveur_det_auth");
+            if (estConnecte === "true") {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("splashScreen").style.display = "flex";
             }
+
+            let sauvegarde = localStorage.getItem("releveur_det_data");
+            if (sauvegarde) { data = JSON.parse(sauvegarde); }
         };
+
+        function verifierCode() {
+            let saisie = document.getElementById("accessCode").value;
+            if (saisie === CODE_UNIQUE) {
+                localStorage.setItem("releveur_det_auth", "true"); 
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("splashScreen").style.display = "flex";
+            } else {
+                document.getElementById("loginError").style.display = "block";
+            }
+        }
+
+        function deconnexion() {
+            if(confirm("Voulez-vous vous déconnecter ? (Vos données resteront sauvegardées)")) {
+                localStorage.removeItem("releveur_det_auth");
+                location.reload(); 
+            }
+        }
 
         function demarrerApplication() {
             document.getElementById("splashScreen").style.display = "none";
@@ -199,9 +187,7 @@
             afficher(); 
         }
 
-        function sauvegarderDonnees() {
-            localStorage.setItem("releveur_det_data", JSON.stringify(data));
-        }
+        function sauvegarderDonnees() { localStorage.setItem("releveur_det_data", JSON.stringify(data)); }
 
         function ajouter() {
             let troncon = document.getElementById("troncon").value;
@@ -215,166 +201,53 @@
 
             if(!troncon) { alert("Veuillez saisir un nom de tronçon."); return; }
 
-            let rowData = { 
-                troncon, 
-                section: section, 
-                chaussee: parseFloat(chaussee), 
-                pavee: parseFloat(pavee), 
-                carrelage: parseFloat(carrelage), 
-                carrelage_special: parseFloat(carrelage_special), 
-                beton: parseFloat(beton), 
-                tn: parseFloat(tn) 
-            };
+            let rowData = { troncon, section, chaussee: parseFloat(chaussee), pavee: parseFloat(pavee), carrelage: parseFloat(carrelage), carrelage_special: parseFloat(carrelage_special), beton: parseFloat(beton), tn: parseFloat(tn) };
 
-            if (editIndex === -1) {
-                data.push(rowData);
-            } else {
-                data[editIndex] = rowData;
-                editIndex = -1;
-                historiqueIndex = -1; 
-                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
-                document.getElementById("formTitle").style.color = "#333";
-            }
-            
-            sauvegarderDonnees(); 
-            afficher();
-            clearForm();
+            if (editIndex === -1) { data.push(rowData); } else { data[editIndex] = rowData; editIndex = -1; historiqueIndex = -1; document.getElementById("submitBtn").innerHTML = "➕ Ajouter"; document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon"; document.getElementById("formTitle").style.color = "#333"; }
+            sauvegarderDonnees(); afficher(); clearForm();
         }
 
         function afficher() {
-            let tbody = document.getElementById("tableBody");
-            tbody.innerHTML = "";
+            let tbody = document.getElementById("tableBody"); tbody.innerHTML = "";
             data.forEach((d, index) => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${d.troncon}</b></td>
-                        <td>${d.section} mm²</td>
-                        <td>${d.chaussee} m</td>
-                        <td>${d.pavee} m</td>
-                        <td>${d.carrelage} m</td>
-                        <td>${d.carrelage_special} m</td>
-                        <td>${d.beton} m</td>
-                        <td>${d.tn} m</td>
-                        <td>
-                            <button onclick="preparerModification(${index})" class="btn-edit-row">✏️</button>
-                            <button onclick="supprimerLigne(${index})" class="btn-delete-row">❌</button>
-                        </td>
-                    </tr>`;
+                tbody.innerHTML += `<tr><td><b>${d.troncon}</b></td><td>${d.section} mm²</td><td>${d.chaussee} m</td><td>${d.pavee} m</td><td>${d.carrelage} m</td><td>${d.carrelage_special} m</td><td>${d.beton} m</td><td>${d.tn} m</td><td><button onclick="preparerModification(${index})" class="btn-edit-row">✏️</button><button onclick="supprimerLigne(${index})" class="btn-delete-row">❌</button></td></tr>`;
             });
         }
 
         function remonterHistorique() {
-            if(data.length === 0) { 
-                alert("Aucune saisie dans le tableau !"); 
-                return; 
-            }
-            if (historiqueIndex === -1) {
-                historiqueIndex = data.length - 1;
-            } else {
-                historiqueIndex--;
-            }
-            if (historiqueIndex < 0) {
-                alert("Vous êtes revenu au tout début. Retour au dernier tronçon saisi.");
-                historiqueIndex = data.length - 1;
-            }
+            if(data.length === 0) { alert("Aucune saisie !"); return; }
+            if (historiqueIndex === -1) { historiqueIndex = data.length - 1; } else { historiqueIndex--; }
+            if (historiqueIndex < 0) { alert("Retour au dernier tronçon."); historiqueIndex = data.length - 1; }
             preparerModification(historiqueIndex);
         }
 
         function preparerModification(index) {
-            let item = data[index];
-            editIndex = index;
-            historiqueIndex = index; 
-
-            document.getElementById("troncon").value = item.troncon;
-            document.getElementById("chaussee").value = item.chaussee;
-            document.getElementById("pavee").value = item.pavee;
-            document.getElementById("carrelage").value = item.carrelage;
-            document.getElementById("carrelage_special").value = item.carrelage_special;
-            document.getElementById("beton").value = item.beton;
-            document.getElementById("tn").value = item.tn;
-            
-            if(item.section === "32") {
-                document.getElementById("sec32").checked = true;
-            } else {
-                document.getElementById("sec50").checked = true;
-            }
-
-            document.getElementById("submitBtn").innerHTML = "💾 Enregistrer la correction";
-            document.getElementById("formTitle").innerHTML = `✏️ Modification (${index + 1}/${data.length}) : ${item.troncon}`;
-            document.getElementById("formTitle").style.color = "#FF9800";
-            
+            let item = data[index]; editIndex = index; historiqueIndex = index;
+            document.getElementById("troncon").value = item.troncon; document.getElementById("chaussee").value = item.chaussee; document.getElementById("pavee").value = item.pavee; document.getElementById("carrelage").value = item.carrelage; document.getElementById("carrelage_special").value = item.carrelage_special; document.getElementById("beton").value = item.beton; document.getElementById("tn").value = item.tn;
+            if(item.section === "32") { document.getElementById("sec32").checked = true; } else { document.getElementById("sec50").checked = true; }
+            document.getElementById("submitBtn").innerHTML = "💾 Enregistrer"; document.getElementById("formTitle").innerHTML = `✏️ Modification (${index + 1}/${data.length})`; document.getElementById("formTitle").style.color = "#FF9800";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function supprimerLigne(index) {
-            if(confirm(`Voulez-vous vraiment supprimer le tronçon "${data[index].troncon}" ?`)) {
-                data.splice(index, 1);
-                sauvegarderDonnees(); 
-                afficher();
-                editIndex = -1;
-                historiqueIndex = -1;
-                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
-                document.getElementById("formTitle").style.color = "#333";
-                clearForm();
-            }
+            if(confirm(`Supprimer le tronçon "${data[index].troncon}" ?`)) { data.splice(index, 1); sauvegarderDonnees(); afficher(); editIndex = -1; historiqueIndex = -1; clearForm(); }
         }
 
         function reinitialiserTout() {
-            if (confirm("⚠️ Vider tout le tableau ? Vérifiez l'export Excel avant !")) {
-                data = [];
-                localStorage.removeItem("releveur_det_data"); 
-                afficher();
-                clearForm();
-                editIndex = -1;
-                historiqueIndex = -1;
-                document.getElementById("submitBtn").innerHTML = "➕ Ajouter";
-                document.getElementById("formTitle").innerHTML = "📍 Saisie Tronçon";
-                document.getElementById("formTitle").style.color = "#333";
-            }
+            if (confirm("⚠️ Vider tout le tableau ?")) { data = []; localStorage.removeItem("releveur_det_data"); afficher(); clearForm(); }
         }
 
         function toggleTableau() {
-            let container = document.getElementById("tableContainer");
-            let btn = document.getElementById("toggleBtn");
-            if (tableauVisible) {
-                container.style.display = "none";
-                btn.innerHTML = "👁️ Afficher le tableau";
-                tableauVisible = false;
-            } else {
-                container.style.display = "block";
-                btn.innerHTML = "🙈 Masquer le tableau";
-                tableauVisible = true;
-            }
+            let container = document.getElementById("tableContainer"); let btn = document.getElementById("toggleBtn");
+            if (tableauVisible) { container.style.display = "none"; btn.innerHTML = "👁️ Afficher"; tableauVisible = false; } else { container.style.display = "block"; btn.innerHTML = "🙈 Masquer"; tableauVisible = true; }
         }
 
-        function clearForm() {
-            document.getElementById("troncon").value = "";
-            document.getElementById("chaussee").value = "";
-            document.getElementById("pavee").value = "";
-            document.getElementById("carrelage").value = "";
-            document.getElementById("carrelage_special").value = "";
-            document.getElementById("beton").value = "";
-            document.getElementById("tn").value = "";
-        }
+        function clearForm() { document.getElementById("troncon").value = ""; document.getElementById("chaussee").value = ""; document.getElementById("pavee").value = ""; document.getElementById("carrelage").value = ""; document.getElementById("carrelage_special").value = ""; document.getElementById("beton").value = ""; document.getElementById("tn").value = ""; }
 
         function exporter() {
-            if(data.length === 0) { alert("Le tableau est vide !"); return; }
-            let dataFormatee = data.map(item => ({
-                "Tronçon": item.troncon,
-                "Section": item.section + " mm²",
-                "Linéaire Chaussée (m)": item.chaussee,
-                "Linéaire Pavée (m)": item.pavee,
-                "Linéaire Carrelage (m)": item.carrelage,
-                "Linéaire Carrelage Spécial (m)": item.carrelage_special,
-                "Linéaire Béton (m)": item.beton,
-                "Linéaire TN (m)": item.tn
-            }));
-            let ws = XLSX.utils.json_to_sheet(dataFormatee);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Troncons");
-            XLSX.writeFile(wb, "metres_troncons.xlsx");
+            if(data.length === 0) { alert("Tableau vide !"); return; }
+            let dataFormatee = data.map(item => ({ "Tronçon": item.troncon, "Section": item.section + " mm²", "Linéaire Chaussée (m)": item.chaussee, "Linéaire Pavée (m)": item.pavee, "Linéaire Carrelage (m)": item.carrelage, "Linéaire Carrelage Spécial (m)": item.carrelage_special, "Linéaire Béton (m)": item.beton, "Linéaire TN (m)": item.tn }));
+            let ws = XLSX.utils.json_to_sheet(dataFormatee); let wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Troncons"); XLSX.writeFile(wb, "metres_troncons.xlsx");
         }
     </script>
 </body>
